@@ -43,8 +43,8 @@ def lambda_handler(event, context):
     job_spec = "job-%s:%s" % (job_type, job_release)
     job_params = {
         "id": id,
-        "raw_url": ds_url,
-        "raw_file": os.path.basename(ds_url),
+        "data_url": ds_url,
+        "data_file": os.path.basename(ds_url),
         "prod_met": md,
     }
     queue = os.environ['JOB_QUEUE'] # eg.g "factotum-job_worker-large"
