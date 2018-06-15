@@ -22,20 +22,20 @@ def lambda_handler(event, context):
     # parse s3 event
     s3_info = message['Records'][0]['s3']
     
-    # parse met and dataset files and urls
+    # parse signal and dataset files and urls
     bucket = s3_info['bucket']['name']
-    met_file = s3_info['object']['key']
-    ds_file = met_file.replace('.met.json', '')
+    signal_file = s3_info['object']['key']
+    ds_file = signal_file.replace('.signal.json', '')
     ds_url = "s3://%s/%s/%s" % (os.environ['DATASET_S3_ENDPOINT'], bucket, ds_file)
     
     # read in metadata
     s3 = boto3.resource('s3')
-    obj = s3.Object(bucket, met_file)
+    obj = s3.Object(bucket, signal_file)
     md = json.loads(obj.get()['Body'].read())
-    print("Got metadata: %s" % json.dumps(md, indent=2))
+    print("Got signal metadata: %s" % json.dumps(md, indent=2))
     
-    # dataset id
-    id = md['id']
+    # data file
+    id = data_file = os.path.basename(ds_url)
     
     #submit mozart jobs to update ES
     job_type = os.environ['JOB_TYPE'] # e.g. "INGEST_L0A_LR_RAW"
@@ -44,7 +44,7 @@ def lambda_handler(event, context):
     job_params = {
         "id": id,
         "data_url": ds_url,
-        "data_file": os.path.basename(ds_url),
+        "data_file": data_file,
         "prod_met": md,
     }
     queue = os.environ['JOB_QUEUE'] # eg.g "factotum-job_worker-large"
