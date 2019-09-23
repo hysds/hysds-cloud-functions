@@ -6,7 +6,7 @@ from utils import submit_job
 print ('Loading function')
 
 signal_file_suffix = None
-# set to True if we're triggering off of signal files
+
 if "SIGNAL_FILE_SUFFIX" in os.environ:
     signal_file_suffix = os.environ['SIGNAL_FILE_SUFFIX']
 
