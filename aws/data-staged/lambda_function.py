@@ -32,7 +32,10 @@ def lambda_handler(event, context):
     print("Trigger file: {}".format(trigger_file))
     if signal_file_suffix:
         ds_file = trigger_file.replace(signal_file_suffix, '')
-    ds_url = "s3://%s/%s/%s" % (os.environ['DATASET_S3_ENDPOINT'], bucket, ds_file)
+    else:
+        ds_file = trigger_file
+    ds_url = "s3://%s/%s/%s" % (os.environ['DATASET_S3_ENDPOINT'], bucket,
+                                ds_file)
     
     # read in metadata
     md = {}
