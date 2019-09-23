@@ -5,8 +5,10 @@ from utils import submit_job
 
 print ('Loading function')
 
+signal_file_suffix = None
 # set to True if we're triggering off of signal files
-is_signal_file = os.environ['IS_SIGNAL_FILE']
+if "SIGNAL_FILE_SUFFIX" in os.environ:
+    signal_file_suffix = os.environ['SIGNAL_FILE_SUFFIX']
 
 def lambda_handler(event, context):
     '''
@@ -28,12 +30,13 @@ def lambda_handler(event, context):
     bucket = s3_info['bucket']['name']
     trigger_file = s3_info['object']['key']
     print("Trigger file: {}".format(trigger_file))
-    if is_signal_file.lower() == 'true':
-        ds_file = trigger_file.replace('.signal.json', '')
+    if signal_file_suffix:
+        ds_file = trigger_file.replace(signal_file_suffix, '')
     ds_url = "s3://%s/%s/%s" % (os.environ['DATASET_S3_ENDPOINT'], bucket, ds_file)
     
     # read in metadata
-    if is_signal_file.lower() == 'true':
+    md = {}
+    if signal_file_suffix:
         s3 = boto3.resource('s3')
         obj = s3.Object(bucket, trigger_file)
         md = json.loads(obj.get()['Body'].read())
