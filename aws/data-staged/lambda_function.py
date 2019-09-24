@@ -5,6 +5,10 @@ from utils import submit_job
 
 print ('Loading function')
 
+signal_file_suffix = None
+
+if "SIGNAL_FILE_SUFFIX" in os.environ:
+    signal_file_suffix = os.environ['SIGNAL_FILE_SUFFIX']
 
 def lambda_handler(event, context):
     '''
@@ -24,16 +28,23 @@ def lambda_handler(event, context):
     
     # parse signal and dataset files and urls
     bucket = s3_info['bucket']['name']
-    signal_file = s3_info['object']['key']
-    ds_file = signal_file.replace('.signal.json', '')
-    ds_url = "s3://%s/%s/%s" % (os.environ['DATASET_S3_ENDPOINT'], bucket, ds_file)
+    trigger_file = s3_info['object']['key']
+    print("Trigger file: {}".format(trigger_file))
+    if signal_file_suffix:
+        ds_file = trigger_file.replace(signal_file_suffix, '')
+    else:
+        ds_file = trigger_file
+    ds_url = "s3://%s/%s/%s" % (os.environ['DATASET_S3_ENDPOINT'], bucket,
+                                ds_file)
     
     # read in metadata
-    s3 = boto3.resource('s3')
-    obj = s3.Object(bucket, signal_file)
-    md = json.loads(obj.get()['Body'].read())
-    print("Got signal metadata: %s" % json.dumps(md, indent=2))
-    
+    md = {}
+    if signal_file_suffix:
+        s3 = boto3.resource('s3')
+        obj = s3.Object(bucket, trigger_file)
+        md = json.loads(obj.get()['Body'].read())
+        print("Got signal metadata: %s" % json.dumps(md, indent=2))
+
     # data file
     id = data_file = os.path.basename(ds_url)
     
