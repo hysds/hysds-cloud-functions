@@ -78,9 +78,9 @@ def lambda_handler(event, context):
     id = data_file = os.path.basename(ds_url)
     
     # submit mozart jobs to update ES
-    default_job_type = os.environ['DEFAULT_JOB_TYPE'] # e.g. "INGEST_L0A_LR_RAW"
-    default_job_release = os.environ['DEFAULT_JOB_RELEASE'] # e.g. "gman-dev"
-    default_queue = os.environ['DEFAULT_JOB_QUEUE']
+    default_job_type = os.environ['JOB_TYPE'] # e.g. "INGEST_L0A_LR_RAW"
+    default_job_release = os.environ['JOB_RELEASE'] # e.g. "gman-dev"
+    default_queue = os.environ['JOB_QUEUE']
     job_types = {}
     if 'JOB_TYPES' in os.environ:
         job_types = json.loads(os.environ['JOB_TYPES'])
