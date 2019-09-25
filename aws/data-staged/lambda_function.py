@@ -26,7 +26,7 @@ def __get_job_type_info(data_file, job_types, default_type, default_release,
     for type in job_types.keys():
         regex = job_types[type]['PATTERN']
         print("Checking if {} matches {}".format(regex, data_file))
-        match = regex.search(data_file)
+        match = re.search(regex, data_file)
         if match:
             return type, job_types[type]['RELEASE'], job_types[type]['QUEUE']
     print("Could not match data file '{}' to a given job type: {}".format(
