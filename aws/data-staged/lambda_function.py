@@ -2,7 +2,6 @@ from __future__ import print_function
 
 import os, sys, re, json, requests, boto3
 from utils import submit_job
-import yaml
 
 print ('Loading function')
 
@@ -10,10 +9,6 @@ signal_file_suffix = None
 
 if "SIGNAL_FILE_SUFFIX" in os.environ:
     signal_file_suffix = os.environ['SIGNAL_FILE_SUFFIX']
-
-# have yaml parse regular expressions
-yaml.SafeLoader.add_constructor(u'tag:yaml.org,2002:python/regexp',
-                                lambda l, n: re.compile(l.construct_scalar(n)))
 
 
 def __get_job_type_info(data_file, job_types, default_type, default_release,
