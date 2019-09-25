@@ -28,9 +28,14 @@ def __get_job_type_info(data_file, job_types, default_type, default_release,
         print("Checking if {} matches {}".format(regex, data_file))
         match = re.search(regex, data_file)
         if match:
-            return type, job_types[type]['RELEASE'], job_types[type]['QUEUE']
-    print("Could not match data file '{}' to a given job type: {}".format(
-        data_file, job_types.keys()))
+            release = job_types[type]['RELEASE']
+            queue = job_types[type]['QUEUE']
+            print("Data file '{}' matches job type info: "
+                  "type: {}, release: {}, queue: {}".format(
+                data_file, type, release, queue))
+            return type, release, queue
+    print("Could not match data file '{}' to a given job type: {}. "
+          "Using default job type info".format(data_file, job_types.keys()))
     return default_type, default_release, default_queue
 
 
