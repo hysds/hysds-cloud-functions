@@ -17,11 +17,14 @@ def __get_job_type_info(data_file, job_types, default_type, default_release,
     Determine the job type.
 
     :param data_file: The data file being ingested.
-    :param job_type: Either a single job type value or a
-    mapping of job types to a regex.
-    :return: If the given job_type is a string, then this will simply get
-    returned. Otherwise, the job_type associated with the given data_file is
-    given.
+    :param job_types: A mapping of job types to a regex.
+    :param default_type: Default job type.
+    :param default_release: Default job release version.
+    :param: default_queue: Default job queue.
+    :return: Function will try to match the given data file to one of 
+    the types specified in the job type mapping. If no mapping exists 
+    or a match could not be found, then it will use the default job
+    type, release, and queue.
     """
     for type in job_types.keys():
         regex = job_types[type]['PATTERN']
