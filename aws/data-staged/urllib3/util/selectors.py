@@ -11,7 +11,8 @@ import select
 import socket
 import sys
 import time
-from collections import namedtuple, Mapping
+from collections import namedtuple
+from collections.abc import Mapping
 
 try:
     monotonic = time.monotonic
@@ -28,11 +29,11 @@ _DEFAULT_SELECTOR = None
 
 class SelectorError(Exception):
     def __init__(self, errcode):
-        super(SelectorError, self).__init__()
+        super().__init__()
         self.errno = errcode
 
     def __repr__(self):
-        return "<SelectorError errno={0}>".format(self.errno)
+        return f"<SelectorError errno={self.errno}>"
 
     def __str__(self):
         return self.__repr__()
@@ -47,81 +48,25 @@ def _fileobj_to_fd(fileobj):
         try:
             fd = int(fileobj.fileno())
         except (AttributeError, TypeError, ValueError):
-            raise ValueError("Invalid file object: {0!r}".format(fileobj))
+            raise ValueError(f"Invalid file object: {fileobj!r}")
     if fd < 0:
-        raise ValueError("Invalid file descriptor: {0}".format(fd))
+        raise ValueError(f"Invalid file descriptor: {fd}")
     return fd
 
 
 # Determine which function to use to wrap system calls because Python 3.5+
 # already handles the case when system calls are interrupted.
-if sys.version_info >= (3, 5):
-    def _syscall_wrapper(func, _, *args, **kwargs):
-        """ This is the short-circuit version of the below logic
+def _syscall_wrapper(func, _, *args, **kwargs):
+    """ This is the short-circuit version of the below logic
         because in Python 3.5+ all system calls automatically restart
         and recalculate their timeouts. """
-        try:
-            return func(*args, **kwargs)
-        except (OSError, IOError, select.error) as e:
-            errcode = None
-            if hasattr(e, "errno"):
-                errcode = e.errno
-            raise SelectorError(errcode)
-else:
-    def _syscall_wrapper(func, recalc_timeout, *args, **kwargs):
-        """ Wrapper function for syscalls that could fail due to EINTR.
-        All functions should be retried if there is time left in the timeout
-        in accordance with PEP 475. """
-        timeout = kwargs.get("timeout", None)
-        if timeout is None:
-            expires = None
-            recalc_timeout = False
-        else:
-            timeout = float(timeout)
-            if timeout < 0.0:  # Timeout less than 0 treated as no timeout.
-                expires = None
-            else:
-                expires = monotonic() + timeout
-
-        args = list(args)
-        if recalc_timeout and "timeout" not in kwargs:
-            raise ValueError(
-                "Timeout must be in args or kwargs to be recalculated")
-
-        result = _SYSCALL_SENTINEL
-        while result is _SYSCALL_SENTINEL:
-            try:
-                result = func(*args, **kwargs)
-            # OSError is thrown by select.select
-            # IOError is thrown by select.epoll.poll
-            # select.error is thrown by select.poll.poll
-            # Aren't we thankful for Python 3.x rework for exceptions?
-            except (OSError, IOError, select.error) as e:
-                # select.error wasn't a subclass of OSError in the past.
-                errcode = None
-                if hasattr(e, "errno"):
-                    errcode = e.errno
-                elif hasattr(e, "args"):
-                    errcode = e.args[0]
-
-                # Also test for the Windows equivalent of EINTR.
-                is_interrupt = (errcode == errno.EINTR or (hasattr(errno, "WSAEINTR") and
-                                                           errcode == errno.WSAEINTR))
-
-                if is_interrupt:
-                    if expires is not None:
-                        current_time = monotonic()
-                        if current_time > expires:
-                            raise OSError(errno=errno.ETIMEDOUT)
-                        if recalc_timeout:
-                            if "timeout" in kwargs:
-                                kwargs["timeout"] = expires - current_time
-                    continue
-                if errcode:
-                    raise SelectorError(errcode)
-                else:
-                    raise
-        return result
+    try:
+        return func(*args, **kwargs)
+    except OSError as e:
+        errcode = None
+        if hasattr(e, "errno"):
+            errcode = e.errno
+        raise SelectorError(errcode)
 
 
 SelectorKey = namedtuple('SelectorKey', ['fileobj', 'fd', 'events', 'data'])
@@ -141,13 +86,13 @@ class _SelectorMapping(Mapping):
             fd = self._selector._fileobj_lookup(fileobj)
             return self._selector._fd_to_key[fd]
         except KeyError:
-            raise KeyError("{0!r} is not registered.".format(fileobj))
+            raise KeyError(f"{fileobj!r} is not registered.")
 
     def __iter__(self):
         return iter(self._selector._fd_to_key)
 
 
-class BaseSelector(object):
+class BaseSelector:
     """ Abstract Selector class
 
     A selector supports registering file objects to be monitored
@@ -192,12 +137,12 @@ class BaseSelector(object):
     def register(self, fileobj, events, data=None):
         """ Register a file object for a set of events to monitor. """
         if (not events) or (events & ~(EVENT_READ | EVENT_WRITE)):
-            raise ValueError("Invalid events: {0!r}".format(events))
+            raise ValueError(f"Invalid events: {events!r}")
 
         key = SelectorKey(fileobj, self._fileobj_lookup(fileobj), events, data)
 
         if key.fd in self._fd_to_key:
-            raise KeyError("{0!r} (FD {1}) is already registered"
+            raise KeyError("{!r} (FD {}) is already registered"
                            .format(fileobj, key.fd))
 
         self._fd_to_key[key.fd] = key
@@ -208,10 +153,10 @@ class BaseSelector(object):
         try:
             key = self._fd_to_key.pop(self._fileobj_lookup(fileobj))
         except KeyError:
-            raise KeyError("{0!r} is not registered".format(fileobj))
+            raise KeyError(f"{fileobj!r} is not registered")
 
         # Getting the fileno of a closed socket on Windows errors with EBADF.
-        except socket.error as e:  # Platform-specific: Windows.
+        except OSError as e:  # Platform-specific: Windows.
             if e.errno != errno.EBADF:
                 raise
             else:
@@ -220,7 +165,7 @@ class BaseSelector(object):
                         self._fd_to_key.pop(key.fd)
                         break
                 else:
-                    raise KeyError("{0!r} is not registered".format(fileobj))
+                    raise KeyError(f"{fileobj!r} is not registered")
         return key
 
     def modify(self, fileobj, events, data=None):
@@ -229,7 +174,7 @@ class BaseSelector(object):
         try:
             key = self._fd_to_key[self._fileobj_lookup(fileobj)]
         except KeyError:
-            raise KeyError("{0!r} is not registered".format(fileobj))
+            raise KeyError(f"{fileobj!r} is not registered")
 
         if events != key.events:
             self.unregister(fileobj)
@@ -261,7 +206,7 @@ class BaseSelector(object):
         try:
             return mapping[fileobj]
         except KeyError:
-            raise KeyError("{0!r} is not registered".format(fileobj))
+            raise KeyError(f"{fileobj!r} is not registered")
 
     def get_map(self):
         """ Return a mapping of file objects to selector keys """
@@ -287,12 +232,12 @@ if hasattr(select, "select"):
     class SelectSelector(BaseSelector):
         """ Select-based selector. """
         def __init__(self):
-            super(SelectSelector, self).__init__()
+            super().__init__()
             self._readers = set()
             self._writers = set()
 
         def register(self, fileobj, events, data=None):
-            key = super(SelectSelector, self).register(fileobj, events, data)
+            key = super().register(fileobj, events, data)
             if events & EVENT_READ:
                 self._readers.add(key.fd)
             if events & EVENT_WRITE:
@@ -300,7 +245,7 @@ if hasattr(select, "select"):
             return key
 
         def unregister(self, fileobj):
-            key = super(SelectSelector, self).unregister(fileobj)
+            key = super().unregister(fileobj)
             self._readers.discard(key.fd)
             self._writers.discard(key.fd)
             return key
@@ -337,11 +282,11 @@ if hasattr(select, "poll"):
     class PollSelector(BaseSelector):
         """ Poll-based selector """
         def __init__(self):
-            super(PollSelector, self).__init__()
+            super().__init__()
             self._poll = select.poll()
 
         def register(self, fileobj, events, data=None):
-            key = super(PollSelector, self).register(fileobj, events, data)
+            key = super().register(fileobj, events, data)
             event_mask = 0
             if events & EVENT_READ:
                 event_mask |= select.POLLIN
@@ -351,7 +296,7 @@ if hasattr(select, "poll"):
             return key
 
         def unregister(self, fileobj):
-            key = super(PollSelector, self).unregister(fileobj)
+            key = super().unregister(fileobj)
             self._poll.unregister(key.fd)
             return key
 
@@ -390,14 +335,14 @@ if hasattr(select, "epoll"):
     class EpollSelector(BaseSelector):
         """ Epoll-based selector """
         def __init__(self):
-            super(EpollSelector, self).__init__()
+            super().__init__()
             self._epoll = select.epoll()
 
         def fileno(self):
             return self._epoll.fileno()
 
         def register(self, fileobj, events, data=None):
-            key = super(EpollSelector, self).register(fileobj, events, data)
+            key = super().register(fileobj, events, data)
             events_mask = 0
             if events & EVENT_READ:
                 events_mask |= select.EPOLLIN
@@ -407,7 +352,7 @@ if hasattr(select, "epoll"):
             return key
 
         def unregister(self, fileobj):
-            key = super(EpollSelector, self).unregister(fileobj)
+            key = super().unregister(fileobj)
             try:
                 _syscall_wrapper(self._epoll.unregister, False, key.fd)
             except SelectorError:
@@ -450,21 +395,21 @@ if hasattr(select, "epoll"):
 
         def close(self):
             self._epoll.close()
-            super(EpollSelector, self).close()
+            super().close()
 
 
 if hasattr(select, "kqueue"):
     class KqueueSelector(BaseSelector):
         """ Kqueue / Kevent-based selector """
         def __init__(self):
-            super(KqueueSelector, self).__init__()
+            super().__init__()
             self._kqueue = select.kqueue()
 
         def fileno(self):
             return self._kqueue.fileno()
 
         def register(self, fileobj, events, data=None):
-            key = super(KqueueSelector, self).register(fileobj, events, data)
+            key = super().register(fileobj, events, data)
             if events & EVENT_READ:
                 kevent = select.kevent(key.fd,
                                        select.KQ_FILTER_READ,
@@ -482,7 +427,7 @@ if hasattr(select, "kqueue"):
             return key
 
         def unregister(self, fileobj):
-            key = super(KqueueSelector, self).unregister(fileobj)
+            key = super().unregister(fileobj)
             if key.events & EVENT_READ:
                 kevent = select.kevent(key.fd,
                                        select.KQ_FILTER_READ,
@@ -533,7 +478,7 @@ if hasattr(select, "kqueue"):
 
         def close(self):
             self._kqueue.close()
-            super(KqueueSelector, self).close()
+            super().close()
 
 
 if not hasattr(select, 'select'):  # Platform-specific: AppEngine

@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import os, json, requests
 
 
@@ -35,7 +33,7 @@ def submit_job(job_spec, job_params, queue, tags=[], priority=0):
     if 'result' in result.keys() and 'success' in result.keys():
         if result['success'] is True:
             job_id = result['result']
-            print('submitted job: %s job_id: %s' % (job_spec, job_id))
+            print('submitted job: {} job_id: {}'.format(job_spec, job_id))
         else:
             print('job not submitted successfully: %s' % result)
             raise Exception('job not submitted successfully: %s' % result)

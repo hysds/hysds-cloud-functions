@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 requests.auth
 ~~~~~~~~~~~~~
@@ -38,7 +36,7 @@ def _basic_auth_str(username, password):
     if not isinstance(username, basestring):
         warnings.warn(
             "Non-string usernames will no longer be supported in Requests "
-            "3.0.0. Please convert the object you've passed in ({0!r}) to "
+            "3.0.0. Please convert the object you've passed in ({!r}) to "
             "a string or bytes object in the near future to avoid "
             "problems.".format(username),
             category=DeprecationWarning,
@@ -48,7 +46,7 @@ def _basic_auth_str(username, password):
     if not isinstance(password, basestring):
         warnings.warn(
             "Non-string passwords will no longer be supported in Requests "
-            "3.0.0. Please convert the object you've passed in ({0!r}) to "
+            "3.0.0. Please convert the object you've passed in ({!r}) to "
             "a string or bytes object in the near future to avoid "
             "problems.".format(password),
             category=DeprecationWarning,
@@ -69,7 +67,7 @@ def _basic_auth_str(username, password):
     return authstr
 
 
-class AuthBase(object):
+class AuthBase:
     """Base class that all auth implementations derive from"""
 
     def __call__(self, r):
@@ -154,7 +152,7 @@ class HTTPDigestAuth(AuthBase):
                 return hashlib.sha1(x).hexdigest()
             hash_utf8 = sha_utf8
 
-        KD = lambda s, d: hash_utf8("%s:%s" % (s, d))
+        KD = lambda s, d: hash_utf8("{}:{}".format(s, d))
 
         if hash_utf8 is None:
             return None
@@ -167,8 +165,8 @@ class HTTPDigestAuth(AuthBase):
         if p_parsed.query:
             path += '?' + p_parsed.query
 
-        A1 = '%s:%s:%s' % (self.username, realm, self.password)
-        A2 = '%s:%s' % (method, path)
+        A1 = '{}:{}:{}'.format(self.username, realm, self.password)
+        A2 = '{}:{}'.format(method, path)
 
         HA1 = hash_utf8(A1)
         HA2 = hash_utf8(A2)
@@ -185,12 +183,12 @@ class HTTPDigestAuth(AuthBase):
 
         cnonce = (hashlib.sha1(s).hexdigest()[:16])
         if _algorithm == 'MD5-SESS':
-            HA1 = hash_utf8('%s:%s:%s' % (HA1, nonce, cnonce))
+            HA1 = hash_utf8('{}:{}:{}'.format(HA1, nonce, cnonce))
 
         if not qop:
-            respdig = KD(HA1, "%s:%s" % (nonce, HA2))
+            respdig = KD(HA1, "{}:{}".format(nonce, HA2))
         elif qop == 'auth' or 'auth' in qop.split(','):
-            noncebit = "%s:%s:%s:%s:%s" % (
+            noncebit = "{}:{}:{}:{}:{}".format(
                 nonce, ncvalue, cnonce, 'auth', HA2
             )
             respdig = KD(HA1, noncebit)
@@ -210,7 +208,7 @@ class HTTPDigestAuth(AuthBase):
         if entdig:
             base += ', digest="%s"' % entdig
         if qop:
-            base += ', qop="auth", nc=%s, cnonce="%s"' % (ncvalue, cnonce)
+            base += ', qop="auth", nc={}, cnonce="{}"'.format(ncvalue, cnonce)
 
         return 'Digest %s' % (base)
 

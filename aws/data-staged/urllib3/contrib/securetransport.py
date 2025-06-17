@@ -24,7 +24,6 @@ To use this module, simply import and inject it::
 
 Happy TLSing!
 """
-from __future__ import absolute_import
 
 import contextlib
 import ctypes
@@ -203,7 +202,7 @@ def _read_callback(connection_id, data_buffer, data_length_pointer):
                 if timeout is None or timeout >= 0:
                     readables = util.wait_for_read([base_socket], timeout)
                     if not readables:
-                        raise socket.error(errno.EAGAIN, 'timed out')
+                        raise OSError(errno.EAGAIN, 'timed out')
 
                 # We need to tell ctypes that we have a buffer that can be
                 # written to. Upsettingly, we do that like this:
@@ -215,7 +214,7 @@ def _read_callback(connection_id, data_buffer, data_length_pointer):
                     if not read_count:
                         return SecurityConst.errSSLClosedGraceful
                     break
-        except (socket.error) as e:
+        except (OSError) as e:
             error = e.errno
 
             if error is not None and error != errno.EAGAIN:
@@ -259,14 +258,14 @@ def _write_callback(connection_id, data_buffer, data_length_pointer):
                 if timeout is None or timeout >= 0:
                     writables = util.wait_for_write([base_socket], timeout)
                     if not writables:
-                        raise socket.error(errno.EAGAIN, 'timed out')
+                        raise OSError(errno.EAGAIN, 'timed out')
                 chunk_sent = base_socket.send(data)
                 sent += chunk_sent
 
                 # This has some needless copying here, but I'm not sure there's
                 # much value in optimising this data path.
                 data = data[chunk_sent:]
-        except (socket.error) as e:
+        except (OSError) as e:
             error = e.errno
 
             if error is not None and error != errno.EAGAIN:
@@ -292,7 +291,7 @@ _read_callback_pointer = Security.SSLReadFunc(_read_callback)
 _write_callback_pointer = Security.SSLWriteFunc(_write_callback)
 
 
-class WrappedSocket(object):
+class WrappedSocket:
     """
     API-compatibility wrapper for Python's OpenSSL wrapped socket object.
 
@@ -495,7 +494,7 @@ class WrappedSocket(object):
                 result = Security.SSLHandshake(self.context)
 
                 if result == SecurityConst.errSSLWouldBlock:
-                    raise socket.timeout("handshake timed out")
+                    raise TimeoutError("handshake timed out")
                 elif result == SecurityConst.errSSLServerAuthCompleted:
                     self._custom_validate(verify, trust_bundle)
                     continue
@@ -545,7 +544,7 @@ class WrappedSocket(object):
             # and return.
             if processed_bytes.value == 0:
                 # Timed out, no data read.
-                raise socket.timeout("recv timed out")
+                raise TimeoutError("recv timed out")
         elif result in (SecurityConst.errSSLClosedGraceful, SecurityConst.errSSLClosedNoNotify):
             # The remote peer has closed this connection. We should do so as
             # well. Note that we don't actually return here because in
@@ -575,7 +574,7 @@ class WrappedSocket(object):
 
         if result == SecurityConst.errSSLWouldBlock and processed_bytes.value == 0:
             # Timed out
-            raise socket.timeout("send timed out")
+            raise TimeoutError("send timed out")
         else:
             _assert_no_error(result)
 
@@ -697,7 +696,7 @@ else:  # Platform-specific: Python 3
 WrappedSocket.makefile = makefile
 
 
-class SecureTransportContext(object):
+class SecureTransportContext:
     """
     I am a wrapper class for the SecureTransport library, to translate the
     interface of the standard library ``SSLContext`` object to calls into

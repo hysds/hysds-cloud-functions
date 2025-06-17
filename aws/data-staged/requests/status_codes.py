@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from .structures import LookupDict
 
 _codes = {

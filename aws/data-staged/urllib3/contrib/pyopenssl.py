@@ -41,7 +41,6 @@ set the ``urllib3.contrib.pyopenssl.DEFAULT_SSL_CIPHER_LIST`` variable.
 .. _sni: https://en.wikipedia.org/wiki/Server_Name_Indication
 .. _crime attack: https://en.wikipedia.org/wiki/CRIME_(security_exploit)
 """
-from __future__ import absolute_import
 
 import OpenSSL.SSL
 from cryptography import x509
@@ -92,9 +91,9 @@ _stdlib_to_openssl_verify = {
     ssl.CERT_REQUIRED:
         OpenSSL.SSL.VERIFY_PEER + OpenSSL.SSL.VERIFY_FAIL_IF_NO_PEER_CERT,
 }
-_openssl_to_stdlib_verify = dict(
-    (v, k) for k, v in _stdlib_to_openssl_verify.items()
-)
+_openssl_to_stdlib_verify = {
+    v: k for k, v in _stdlib_to_openssl_verify.items()
+}
 
 # OpenSSL will only write 16K at a time
 SSL_WRITE_BLOCKSIZE = 16384
@@ -166,15 +165,14 @@ def _dnsname_to_stdlib(name):
         """
         import idna
 
-        for prefix in [u'*.', u'.']:
+        for prefix in ['*.', '.']:
             if name.startswith(prefix):
                 name = name[len(prefix):]
                 return prefix.encode('ascii') + idna.encode(name)
         return idna.encode(name)
 
     name = idna_encode(name)
-    if sys.version_info >= (3, 0):
-        name = name.decode('utf-8')
+    name = name.decode('utf-8')
     return name
 
 
@@ -229,7 +227,7 @@ def get_subj_alt_name(peer_cert):
     return names
 
 
-class WrappedSocket(object):
+class WrappedSocket:
     '''API-compatibility wrapper for Python OpenSSL's Connection-class.
 
     Note: _makefile_refs, _drop() and _reuse() are needed for the garbage
@@ -269,7 +267,7 @@ class WrappedSocket(object):
         except OpenSSL.SSL.WantReadError:
             rd = util.wait_for_read(self.socket, self.socket.gettimeout())
             if not rd:
-                raise timeout('The read operation timed out')
+                raise TimeoutError('The read operation timed out')
             else:
                 return self.recv(*args, **kwargs)
         else:
@@ -291,7 +289,7 @@ class WrappedSocket(object):
         except OpenSSL.SSL.WantReadError:
             rd = util.wait_for_read(self.socket, self.socket.gettimeout())
             if not rd:
-                raise timeout('The read operation timed out')
+                raise TimeoutError('The read operation timed out')
             else:
                 return self.recv_into(*args, **kwargs)
 
@@ -305,7 +303,7 @@ class WrappedSocket(object):
             except OpenSSL.SSL.WantWriteError:
                 wr = util.wait_for_write(self.socket, self.socket.gettimeout())
                 if not wr:
-                    raise timeout()
+                    raise TimeoutError()
                 continue
             except OpenSSL.SSL.SysCallError as e:
                 raise SocketError(str(e))
@@ -368,7 +366,7 @@ else:  # Platform-specific: Python 3
 WrappedSocket.makefile = makefile
 
 
-class PyOpenSSLContext(object):
+class PyOpenSSLContext:
     """
     I am a wrapper class for the PyOpenSSL ``Context`` object. I am responsible
     for translating the interface of the standard library ``SSLContext`` object
@@ -404,7 +402,7 @@ class PyOpenSSLContext(object):
         self._ctx.set_default_verify_paths()
 
     def set_ciphers(self, ciphers):
-        if isinstance(ciphers, six.text_type):
+        if isinstance(ciphers, str):
             ciphers = ciphers.encode('utf-8')
         self._ctx.set_cipher_list(ciphers)
 
@@ -428,7 +426,7 @@ class PyOpenSSLContext(object):
                     server_hostname=None):
         cnx = OpenSSL.SSL.Connection(self._ctx, sock)
 
-        if isinstance(server_hostname, six.text_type):  # Platform-specific: Python 3
+        if isinstance(server_hostname, str):  # Platform-specific: Python 3
             server_hostname = server_hostname.encode('utf-8')
 
         if server_hostname is not None:
@@ -442,7 +440,7 @@ class PyOpenSSLContext(object):
             except OpenSSL.SSL.WantReadError:
                 rd = util.wait_for_read(sock, sock.gettimeout())
                 if not rd:
-                    raise timeout('select timed out')
+                    raise TimeoutError('select timed out')
                 continue
             except OpenSSL.SSL.Error as e:
                 raise ssl.SSLError('bad handshake: %r' % e)

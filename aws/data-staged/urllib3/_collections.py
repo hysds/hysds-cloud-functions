@@ -1,5 +1,4 @@
-from __future__ import absolute_import
-from collections import Mapping, MutableMapping
+from collections.abc import Mapping, MutableMapping
 try:
     from threading import RLock
 except ImportError:  # Platform-specific: No threads available
@@ -133,7 +132,7 @@ class HTTPHeaderDict(MutableMapping):
     """
 
     def __init__(self, headers=None, **kwargs):
-        super(HTTPHeaderDict, self).__init__()
+        super().__init__()
         self._container = OrderedDict()
         if headers is not None:
             if isinstance(headers, HTTPHeaderDict):
@@ -162,8 +161,8 @@ class HTTPHeaderDict(MutableMapping):
             return False
         if not isinstance(other, type(self)):
             other = type(self)(other)
-        return (dict((k.lower(), v) for k, v in self.itermerged()) ==
-                dict((k.lower(), v) for k, v in other.itermerged()))
+        return ({k.lower(): v for k, v in self.itermerged()} ==
+                {k.lower(): v for k, v in other.itermerged()})
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -228,7 +227,7 @@ class HTTPHeaderDict(MutableMapping):
         """
         if len(args) > 1:
             raise TypeError("extend() takes at most 1 positional "
-                            "arguments ({0} given)".format(len(args)))
+                            "arguments ({} given)".format(len(args)))
         other = args[0] if len(args) >= 1 else ()
 
         if isinstance(other, HTTPHeaderDict):
@@ -268,7 +267,7 @@ class HTTPHeaderDict(MutableMapping):
     get_all = getlist
 
     def __repr__(self):
-        return "%s(%s)" % (type(self).__name__, dict(self.itermerged()))
+        return "{}({})".format(type(self).__name__, dict(self.itermerged()))
 
     def _copy_from(self, other):
         for key in other:

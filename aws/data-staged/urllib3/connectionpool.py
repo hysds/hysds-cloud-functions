@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 import errno
 import logging
 import sys
@@ -43,11 +42,7 @@ from .util.timeout import Timeout
 from .util.url import get_host, Url
 
 
-if six.PY2:
-    # Queue is imported for side effects on MS Windows
-    import Queue as _unused_module_Queue  # noqa: F401
-
-xrange = six.moves.xrange
+xrange = range
 
 log = logging.getLogger(__name__)
 
@@ -55,7 +50,7 @@ _Default = object()
 
 
 # Pool objects
-class ConnectionPool(object):
+class ConnectionPool:
     """
     Base class for all connection pools, such as
     :class:`.HTTPConnectionPool` and :class:`.HTTPSConnectionPool`.
@@ -73,7 +68,7 @@ class ConnectionPool(object):
         self.port = port
 
     def __str__(self):
-        return '%s(host=%r, port=%r)' % (type(self).__name__,
+        return '{}(host={!r}, port={!r})'.format(type(self).__name__,
                                          self.host, self.port)
 
     def __enter__(self):
@@ -92,7 +87,7 @@ class ConnectionPool(object):
 
 
 # This is taken from http://hg.python.org/cpython/file/7aaba721ebc0/Lib/socket.py#l252
-_blocking_errnos = set([errno.EAGAIN, errno.EWOULDBLOCK])
+_blocking_errnos = {errno.EAGAIN, errno.EWOULDBLOCK}
 
 
 class HTTPConnectionPool(ConnectionPool, RequestMethods):
@@ -384,7 +379,7 @@ class HTTPConnectionPool(ConnectionPool, RequestMethods):
                 except Exception as e:
                     # Remove the TypeError from the exception chain in Python 3;
                     # otherwise it looks like a programming error was the cause.
-                    six.raise_from(e, None)
+                    raise e from None
         except (SocketTimeout, BaseSSLError, SocketError) as e:
             self._raise_timeout(err=e, url=url, timeout_value=read_timeout)
             raise
@@ -843,7 +838,7 @@ class HTTPSConnectionPool(HTTPConnectionPool):
         """
         Called right before a request is made, after the socket is created.
         """
-        super(HTTPSConnectionPool, self)._validate_conn(conn)
+        super()._validate_conn(conn)
 
         # Force connect early to allow us to validate the connection.
         if not getattr(conn, 'sock', None):  # AppEngine might not have  `.sock`

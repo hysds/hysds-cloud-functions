@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 import datetime
 import logging
 import os
@@ -62,12 +61,12 @@ port_by_scheme = {
 RECENT_DATE = datetime.date(2016, 1, 1)
 
 
-class DummyConnection(object):
+class DummyConnection:
     """Used to detect a failed ConnectionCls import."""
     pass
 
 
-class HTTPConnection(_HTTPConnection, object):
+class HTTPConnection(_HTTPConnection):
     """
     Based on httplib.HTTPConnection but provides an extra constructor
     backwards-compatibility layer between older and newer Pythons.
@@ -104,8 +103,7 @@ class HTTPConnection(_HTTPConnection, object):
     is_verified = False
 
     def __init__(self, *args, **kw):
-        if six.PY3:  # Python 3
-            kw.pop('strict', None)
+        kw.pop('strict', None)
 
         # Pre-set source_address in case we have an older Python like 2.6.
         self.source_address = kw.get('source_address')
@@ -187,13 +185,13 @@ class HTTPConnection(_HTTPConnection, object):
         self.endheaders()
 
         if body is not None:
-            stringish_types = six.string_types + (six.binary_type,)
+            stringish_types = (str,) + (bytes,)
             if isinstance(body, stringish_types):
                 body = (body,)
             for chunk in body:
                 if not chunk:
                     continue
-                if not isinstance(chunk, six.binary_type):
+                if not isinstance(chunk, bytes):
                     chunk = chunk.encode('utf8')
                 len_str = hex(len(chunk))[2:]
                 self.send(len_str.encode('utf-8'))
@@ -301,7 +299,7 @@ class VerifiedHTTPSConnection(HTTPSConnection):
         is_time_off = datetime.date.today() < RECENT_DATE
         if is_time_off:
             warnings.warn((
-                'System time is way off (before {0}). This will probably '
+                'System time is way off (before {}). This will probably '
                 'lead to SSL verification errors').format(RECENT_DATE),
                 SystemTimeWarning
             )
@@ -337,7 +335,7 @@ class VerifiedHTTPSConnection(HTTPSConnection):
             cert = self.sock.getpeercert()
             if not cert.get('subjectAltName', ()):
                 warnings.warn((
-                    'Certificate for {0} has no `subjectAltName`, falling back to check for a '
+                    'Certificate for {} has no `subjectAltName`, falling back to check for a '
                     '`commonName` for now. This feature is being removed by major browsers and '
                     'deprecated by RFC 2818. (See https://github.com/shazow/urllib3/issues/497 '
                     'for details.)'.format(hostname)),

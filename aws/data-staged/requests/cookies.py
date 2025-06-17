@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 requests.cookies
 ~~~~~~~~~~~~~~~~
@@ -23,7 +21,7 @@ except ImportError:
     import dummy_threading as threading
 
 
-class MockRequest(object):
+class MockRequest:
     """Wraps a `requests.Request` to mimic a `urllib2.Request`.
 
     The code in `cookielib.CookieJar` expects this interface in order to correctly
@@ -95,7 +93,7 @@ class MockRequest(object):
         return self.get_host()
 
 
-class MockResponse(object):
+class MockResponse:
     """Wraps a `httplib.HTTPMessage` to mimic a `urllib.addinfourl`.
 
     ...what? Basically, expose the parsed HTTP headers from the server response
@@ -169,7 +167,7 @@ class CookieConflictError(RuntimeError):
     """
 
 
-class RequestsCookieJar(cookielib.CookieJar, collections.MutableMapping):
+class RequestsCookieJar(cookielib.CookieJar, collections.abc.MutableMapping):
     """Compatibility class; is a cookielib.CookieJar, but exposes a dict
     interface.
 
@@ -315,7 +313,7 @@ class RequestsCookieJar(cookielib.CookieJar, collections.MutableMapping):
 
     def __contains__(self, name):
         try:
-            return super(RequestsCookieJar, self).__contains__(name)
+            return super().__contains__(name)
         except CookieConflictError:
             return True
 
@@ -344,7 +342,7 @@ class RequestsCookieJar(cookielib.CookieJar, collections.MutableMapping):
     def set_cookie(self, cookie, *args, **kwargs):
         if hasattr(cookie.value, 'startswith') and cookie.value.startswith('"') and cookie.value.endswith('"'):
             cookie.value = cookie.value.replace('\\"', '')
-        return super(RequestsCookieJar, self).set_cookie(cookie, *args, **kwargs)
+        return super().set_cookie(cookie, *args, **kwargs)
 
     def update(self, other):
         """Updates this jar with cookies from another CookieJar or dict-like"""
@@ -352,7 +350,7 @@ class RequestsCookieJar(cookielib.CookieJar, collections.MutableMapping):
             for cookie in other:
                 self.set_cookie(copy.copy(cookie))
         else:
-            super(RequestsCookieJar, self).update(other)
+            super().update(other)
 
     def _find(self, name, domain=None, path=None):
         """Requests uses this method internally to get cookie values.
@@ -372,7 +370,7 @@ class RequestsCookieJar(cookielib.CookieJar, collections.MutableMapping):
                     if path is None or cookie.path == path:
                         return cookie.value
 
-        raise KeyError('name=%r, domain=%r, path=%r' % (name, domain, path))
+        raise KeyError('name={!r}, domain={!r}, path={!r}'.format(name, domain, path))
 
     def _find_no_duplicates(self, name, domain=None, path=None):
         """Both ``__get_item__`` and ``get`` call this function: it's never
@@ -397,7 +395,7 @@ class RequestsCookieJar(cookielib.CookieJar, collections.MutableMapping):
 
         if toReturn:
             return toReturn
-        raise KeyError('name=%r, domain=%r, path=%r' % (name, domain, path))
+        raise KeyError('name={!r}, domain={!r}, path={!r}'.format(name, domain, path))
 
     def __getstate__(self):
         """Unlike a normal CookieJar, this class is pickleable."""

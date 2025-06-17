@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 requests.session
 ~~~~~~~~~~~~~~~~
@@ -10,7 +8,7 @@ requests (cookies, auth, proxies).
 import os
 import platform
 import time
-from collections import Mapping
+from collections.abc import Mapping
 from datetime import timedelta
 
 from .auth import _basic_auth_str
@@ -93,7 +91,7 @@ def merge_hooks(request_hooks, session_hooks, dict_class=OrderedDict):
     return merge_setting(request_hooks, session_hooks, dict_class)
 
 
-class SessionRedirectMixin(object):
+class SessionRedirectMixin:
 
     def get_redirect_target(self, resp):
         """Receives a Response. Returns a redirect URI or ``None``"""
@@ -145,7 +143,7 @@ class SessionRedirectMixin(object):
             # Handle redirection without scheme (see: RFC 1808 Section 4)
             if url.startswith('//'):
                 parsed_rurl = urlparse(resp.url)
-                url = '%s:%s' % (to_native_string(parsed_rurl.scheme), url)
+                url = '{}:{}'.format(to_native_string(parsed_rurl.scheme), url)
 
             # The scheme should be lower case...
             parsed = urlparse(url)
@@ -719,7 +717,7 @@ class Session(SessionRedirectMixin):
             self.adapters[key] = self.adapters.pop(key)
 
     def __getstate__(self):
-        state = dict((attr, getattr(self, attr, None)) for attr in self.__attrs__)
+        state = {attr: getattr(self, attr, None) for attr in self.__attrs__}
         return state
 
     def __setstate__(self, state):

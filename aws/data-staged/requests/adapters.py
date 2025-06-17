@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 requests.adapters
 ~~~~~~~~~~~~~~~~~
@@ -49,11 +47,11 @@ DEFAULT_RETRIES = 0
 DEFAULT_POOL_TIMEOUT = None
 
 
-class BaseAdapter(object):
+class BaseAdapter:
     """The Base Transport Adapter"""
 
     def __init__(self):
-        super(BaseAdapter, self).__init__()
+        super().__init__()
 
     def send(self, request, stream=False, timeout=None, verify=True,
              cert=None, proxies=None):
@@ -117,7 +115,7 @@ class HTTPAdapter(BaseAdapter):
         self.config = {}
         self.proxy_manager = {}
 
-        super(HTTPAdapter, self).__init__()
+        super().__init__()
 
         self._pool_connections = pool_connections
         self._pool_maxsize = pool_maxsize
@@ -126,8 +124,8 @@ class HTTPAdapter(BaseAdapter):
         self.init_poolmanager(pool_connections, pool_maxsize, block=pool_block)
 
     def __getstate__(self):
-        return dict((attr, getattr(self, attr, None)) for attr in
-                    self.__attrs__)
+        return {attr: getattr(self, attr, None) for attr in
+                    self.__attrs__}
 
     def __setstate__(self, state):
         # Can't handle by adding 'proxy_manager' to self.__attrs__ because
@@ -222,8 +220,8 @@ class HTTPAdapter(BaseAdapter):
                 cert_loc = DEFAULT_CA_BUNDLE_PATH
 
             if not cert_loc or not os.path.exists(cert_loc):
-                raise IOError("Could not find a suitable TLS CA certificate bundle, "
-                              "invalid path: {0}".format(cert_loc))
+                raise OSError("Could not find a suitable TLS CA certificate bundle, "
+                              "invalid path: {}".format(cert_loc))
 
             conn.cert_reqs = 'CERT_REQUIRED'
 
@@ -244,11 +242,11 @@ class HTTPAdapter(BaseAdapter):
                 conn.cert_file = cert
                 conn.key_file = None
             if conn.cert_file and not os.path.exists(conn.cert_file):
-                raise IOError("Could not find the TLS certificate file, "
-                              "invalid path: {0}".format(conn.cert_file))
+                raise OSError("Could not find the TLS certificate file, "
+                              "invalid path: {}".format(conn.cert_file))
             if conn.key_file and not os.path.exists(conn.key_file):
-                raise IOError("Could not find the TLS key file, "
-                              "invalid path: {0}".format(conn.key_file))
+                raise OSError("Could not find the TLS key file, "
+                              "invalid path: {}".format(conn.key_file))
 
     def build_response(self, req, resp):
         """Builds a :class:`Response <requests.Response>` object from a urllib3
@@ -416,7 +414,7 @@ class HTTPAdapter(BaseAdapter):
                 timeout = TimeoutSauce(connect=connect, read=read)
             except ValueError as e:
                 # this may raise a string formatting error.
-                err = ("Invalid timeout {0}. Pass a (connect, read) "
+                err = ("Invalid timeout {}. Pass a (connect, read) "
                        "timeout tuple, or a single float to set "
                        "both timeouts to the same value".format(timeout))
                 raise ValueError(err)
@@ -486,7 +484,7 @@ class HTTPAdapter(BaseAdapter):
                     low_conn.close()
                     raise
 
-        except (ProtocolError, socket.error) as err:
+        except (ProtocolError, OSError) as err:
             raise ConnectionError(err, request=request)
 
         except MaxRetryError as e:

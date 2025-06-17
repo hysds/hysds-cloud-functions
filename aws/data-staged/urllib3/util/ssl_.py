@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 import errno
 import warnings
 import hmac
@@ -92,7 +91,7 @@ try:
 except ImportError:
     import sys
 
-    class SSLContext(object):  # Platform-specific: Python 2 & 3.1
+    class SSLContext:  # Platform-specific: Python 2 & 3.1
         supports_set_ciphers = ((2, 7) <= sys.version_info < (3,) or
                                 (3, 2) <= sys.version_info)
 
@@ -165,7 +164,7 @@ def assert_fingerprint(cert, fingerprint):
     hashfunc = HASHFUNC_MAP.get(digest_length)
     if not hashfunc:
         raise SSLError(
-            'Fingerprint of invalid length: {0}'.format(fingerprint))
+            f'Fingerprint of invalid length: {fingerprint}')
 
     # We need encode() here for py32; works on py2 and p33.
     fingerprint_bytes = unhexlify(fingerprint.encode())
@@ -173,7 +172,7 @@ def assert_fingerprint(cert, fingerprint):
     cert_digest = hashfunc(cert).digest()
 
     if not _const_compare_digest(cert_digest, fingerprint_bytes):
-        raise SSLError('Fingerprints did not match. Expected "{0}", got "{1}".'
+        raise SSLError('Fingerprints did not match. Expected "{}", got "{}".'
                        .format(fingerprint, hexlify(cert_digest)))
 
 
@@ -311,7 +310,7 @@ def ssl_wrap_socket(sock, keyfile=None, certfile=None, cert_reqs=None,
     if ca_certs or ca_cert_dir:
         try:
             context.load_verify_locations(ca_certs, ca_cert_dir)
-        except IOError as e:  # Platform-specific: Python 2.6, 2.7, 3.2
+        except OSError as e:  # Platform-specific: Python 2.6, 2.7, 3.2
             raise SSLError(e)
         # Py33 raises FileNotFoundError which subclasses OSError
         # These are not equivalent unless we check the errno attribute

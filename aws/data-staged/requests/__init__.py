@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 #   __
 #  /__)  _  _     _   _ _/   _
 # / (   (- (/ (/ (- _)  /  _)
@@ -75,7 +73,7 @@ def check_compatibility(urllib3_version, chardet_version):
 try:
     check_compatibility(urllib3.__version__, chardet.__version__)
 except (AssertionError, ValueError):
-    warnings.warn("urllib3 ({0}) or chardet ({1}) doesn't match a supported "
+    warnings.warn("urllib3 ({}) or chardet ({}) doesn't match a supported "
                   "version!".format(urllib3.__version__, chardet.__version__),
                   RequestsDependencyWarning)
 

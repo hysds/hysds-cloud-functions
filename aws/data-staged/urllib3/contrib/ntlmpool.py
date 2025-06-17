@@ -3,7 +3,6 @@ NTLM authenticating pool, contributed by erikcederstran
 
 Issue #10, see: http://code.google.com/p/urllib3/issues/detail?id=10
 """
-from __future__ import absolute_import
 
 from logging import getLogger
 from ntlm import ntlm
@@ -28,7 +27,7 @@ class NTLMConnectionPool(HTTPSConnectionPool):
         user is the Windows user, probably in the DOMAIN\\username format.
         pw is the password for the user.
         """
-        super(NTLMConnectionPool, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.authurl = authurl
         self.rawuser = user
         user_parts = user.split('\\', 1)
@@ -106,7 +105,7 @@ class NTLMConnectionPool(HTTPSConnectionPool):
         if headers is None:
             headers = {}
         headers['Connection'] = 'Keep-Alive'
-        return super(NTLMConnectionPool, self).urlopen(method, url, body,
+        return super().urlopen(method, url, body,
                                                        headers, retries,
                                                        redirect,
                                                        assert_same_host)

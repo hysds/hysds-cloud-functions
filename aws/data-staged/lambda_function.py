@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import os, sys, re, json, requests, boto3
 from utils import submit_job
 
@@ -28,7 +26,7 @@ def __get_job_type_info(data_file, job_types, default_type, default_release,
     """
     for type in job_types.keys():
         regex = job_types[type]['PATTERN']
-        print("Checking if {} matches {}".format(regex, data_file))
+        print(f"Checking if {regex} matches {data_file}")
         match = re.search(regex, data_file)
         if match:
             release = job_types[type]['RELEASE']
@@ -61,12 +59,12 @@ def lambda_handler(event, context):
     # parse signal and dataset files and urls
     bucket = s3_info['bucket']['name']
     trigger_file = s3_info['object']['key']
-    print("Trigger file: {}".format(trigger_file))
+    print(f"Trigger file: {trigger_file}")
     if signal_file_suffix:
         ds_file = trigger_file.replace(signal_file_suffix, '')
     else:
         ds_file = trigger_file
-    ds_url = "s3://%s/%s/%s" % (os.environ['DATASET_S3_ENDPOINT'], bucket,
+    ds_url = "s3://{}/{}/{}".format(os.environ['DATASET_S3_ENDPOINT'], bucket,
                                 ds_file)
     
     # read in metadata
@@ -91,7 +89,7 @@ def lambda_handler(event, context):
                                                        default_job_type,
                                                        default_job_release,
                                                        default_queue)
-    job_spec = "job-%s:%s" % (job_type, job_release)
+    job_spec = "job-{}:{}".format(job_type, job_release)
     job_params = {
         "id": id,
         "data_url": ds_url,

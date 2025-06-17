@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 import email.utils
 import mimetypes
 
@@ -33,21 +32,21 @@ def format_header_param(name, value):
         The value of the parameter, provided as a unicode string.
     """
     if not any(ch in value for ch in '"\\\r\n'):
-        result = '%s="%s"' % (name, value)
+        result = '{}="{}"'.format(name, value)
         try:
             result.encode('ascii')
         except (UnicodeEncodeError, UnicodeDecodeError):
             pass
         else:
             return result
-    if not six.PY3 and isinstance(value, six.text_type):  # Python 2:
+    if not six.PY3 and isinstance(value, str):  # Python 2:
         value = value.encode('utf-8')
     value = email.utils.encode_rfc2231(value, 'utf-8')
-    value = '%s*=%s' % (name, value)
+    value = '{}*={}'.format(name, value)
     return value
 
 
-class RequestField(object):
+class RequestField:
     """
     A data container for request body parameters.
 
@@ -144,12 +143,12 @@ class RequestField(object):
         sort_keys = ['Content-Disposition', 'Content-Type', 'Content-Location']
         for sort_key in sort_keys:
             if self.headers.get(sort_key, False):
-                lines.append('%s: %s' % (sort_key, self.headers[sort_key]))
+                lines.append('{}: {}'.format(sort_key, self.headers[sort_key]))
 
         for header_name, header_value in self.headers.items():
             if header_name not in sort_keys:
                 if header_value:
-                    lines.append('%s: %s' % (header_name, header_value))
+                    lines.append('{}: {}'.format(header_name, header_value))
 
         lines.append('\r\n')
         return '\r\n'.join(lines)

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This module contains provisional support for SOCKS proxies from within
 urllib3. This module supports SOCKS4 (specifically the SOCKS4A variant) and
@@ -21,7 +20,6 @@ Known Limitations:
 - Currently PySocks does not support IPv6 connections to the SOCKS proxy. Any
   such connection attempt will fail.
 """
-from __future__ import absolute_import
 
 try:
     import socks
@@ -62,7 +60,7 @@ class SOCKSConnection(HTTPConnection):
     """
     def __init__(self, *args, **kwargs):
         self._socks_options = kwargs.pop('_socks_options')
-        super(SOCKSConnection, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _new_conn(self):
         """
@@ -181,7 +179,7 @@ class SOCKSProxyManager(PoolManager):
         }
         connection_pool_kw['_socks_options'] = socks_options
 
-        super(SOCKSProxyManager, self).__init__(
+        super().__init__(
             num_pools, headers, **connection_pool_kw
         )
 

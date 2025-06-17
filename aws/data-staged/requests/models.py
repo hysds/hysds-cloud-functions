@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 requests.models
 ~~~~~~~~~~~~~~~
@@ -57,7 +55,7 @@ CONTENT_CHUNK_SIZE = 10 * 1024
 ITER_CHUNK_SIZE = 512
 
 
-class RequestEncodingMixin(object):
+class RequestEncodingMixin:
     @property
     def path_url(self):
         """Build the path URL to use."""
@@ -167,17 +165,17 @@ class RequestEncodingMixin(object):
         return body, content_type
 
 
-class RequestHooksMixin(object):
+class RequestHooksMixin:
     def register_hook(self, event, hook):
         """Properly register a hook."""
 
         if event not in self.hooks:
             raise ValueError('Unsupported event specified, with event name "%s"' % (event))
 
-        if isinstance(hook, collections.Callable):
+        if isinstance(hook, collections.abc.Callable):
             self.hooks[event].append(hook)
         elif hasattr(hook, '__iter__'):
-            self.hooks[event].extend(h for h in hook if isinstance(h, collections.Callable))
+            self.hooks[event].extend(h for h in hook if isinstance(h, collections.abc.Callable))
 
     def deregister_hook(self, event, hook):
         """Deregister a previously registered hook.
@@ -390,7 +388,7 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
                 host = self._get_idna_encoded_host(host)
             except UnicodeError:
                 raise InvalidURL('URL has an invalid label.')
-        elif host.startswith(u'*'):
+        elif host.startswith('*'):
             raise InvalidURL('URL has an invalid label.')
 
         # Carefully reconstruct the network location
@@ -423,7 +421,7 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
         enc_params = self._encode_params(params)
         if enc_params:
             if query:
-                query = '%s&%s' % (query, enc_params)
+                query = '{}&{}'.format(query, enc_params)
             else:
                 query = enc_params
 
@@ -461,7 +459,7 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
 
         is_stream = all([
             hasattr(data, '__iter__'),
-            not isinstance(data, (basestring, list, tuple, collections.Mapping))
+            not isinstance(data, (basestring, list, tuple, collections.abc.Mapping))
         ])
 
         try:
@@ -478,7 +476,7 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
                 # of a redirect.
                 try:
                     self._body_position = body.tell()
-                except (IOError, OSError):
+                except OSError:
                     # This differentiates from None, allowing us to catch
                     # a failed `tell()` later when trying to rewind the body
                     self._body_position = object()
@@ -575,7 +573,7 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
             self.register_hook(event, hooks[event])
 
 
-class Response(object):
+class Response:
     """The :class:`Response <Response>` object, which contains a
     server's response to an HTTP request.
     """
@@ -644,10 +642,10 @@ class Response(object):
         if not self._content_consumed:
             self.content
 
-        return dict(
-            (attr, getattr(self, attr, None))
+        return {
+            attr: getattr(self, attr, None)
             for attr in self.__attrs__
-        )
+        }
 
     def __setstate__(self, state):
         for name, value in state.items():
@@ -801,8 +799,7 @@ class Response(object):
             else:
                 pending = None
 
-            for line in lines:
-                yield line
+            yield from lines
 
         if pending is not None:
             yield pending
@@ -820,7 +817,7 @@ class Response(object):
             if self.status_code == 0 or self.raw is None:
                 self._content = None
             else:
-                self._content = bytes().join(self.iter_content(CONTENT_CHUNK_SIZE)) or bytes()
+                self._content = b''.join(self.iter_content(CONTENT_CHUNK_SIZE)) or b''
 
         self._content_consumed = True
         # don't need to release the connection; that's been handled by urllib3
@@ -845,7 +842,7 @@ class Response(object):
         encoding = self.encoding
 
         if not self.content:
-            return str('')
+            return ''
 
         # Fallback to auto-detected encoding.
         if self.encoding is None:
@@ -926,10 +923,10 @@ class Response(object):
             reason = self.reason
 
         if 400 <= self.status_code < 500:
-            http_error_msg = u'%s Client Error: %s for url: %s' % (self.status_code, reason, self.url)
+            http_error_msg = '{} Client Error: {} for url: {}'.format(self.status_code, reason, self.url)
 
         elif 500 <= self.status_code < 600:
-            http_error_msg = u'%s Server Error: %s for url: %s' % (self.status_code, reason, self.url)
+            http_error_msg = '{} Server Error: {} for url: {}'.format(self.status_code, reason, self.url)
 
         if http_error_msg:
             raise HTTPError(http_error_msg, response=self)

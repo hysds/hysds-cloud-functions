@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 requests.structures
 ~~~~~~~~~~~~~~~~~~~
@@ -12,7 +10,7 @@ import collections
 from .compat import OrderedDict
 
 
-class CaseInsensitiveDict(collections.MutableMapping):
+class CaseInsensitiveDict(collections.abc.MutableMapping):
     """A case-insensitive ``dict``-like object.
 
     Implements all methods and operations of
@@ -71,7 +69,7 @@ class CaseInsensitiveDict(collections.MutableMapping):
         )
 
     def __eq__(self, other):
-        if isinstance(other, collections.Mapping):
+        if isinstance(other, collections.abc.Mapping):
             other = CaseInsensitiveDict(other)
         else:
             return NotImplemented
@@ -91,7 +89,7 @@ class LookupDict(dict):
 
     def __init__(self, name=None):
         self.name = name
-        super(LookupDict, self).__init__()
+        super().__init__()
 
     def __repr__(self):
         return '<lookup \'%s\'>' % (self.name)

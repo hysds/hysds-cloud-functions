@@ -13,7 +13,6 @@ If no paths are provided, it takes its input from stdin.
 
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
 import sys
@@ -45,10 +44,10 @@ def description_of(lines, name='stdin'):
     if PY2:
         name = name.decode(sys.getfilesystemencoding(), 'ignore')
     if result['encoding']:
-        return '{0}: {1} with confidence {2}'.format(name, result['encoding'],
+        return '{}: {} with confidence {}'.format(name, result['encoding'],
                                                      result['confidence'])
     else:
-        return '{0}: no result'.format(name)
+        return f'{name}: no result'
 
 
 def main(argv=None):
@@ -69,7 +68,7 @@ def main(argv=None):
                         type=argparse.FileType('rb'), nargs='*',
                         default=[sys.stdin if PY2 else sys.stdin.buffer])
     parser.add_argument('--version', action='version',
-                        version='%(prog)s {0}'.format(__version__))
+                        version=f'%(prog)s {__version__}')
     args = parser.parse_args(argv)
 
     for f in args.input:

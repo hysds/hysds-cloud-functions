@@ -42,7 +42,7 @@ from .langturkishmodel import Latin5TurkishModel
 
 class SBCSGroupProber(CharSetGroupProber):
     def __init__(self):
-        super(SBCSGroupProber, self).__init__()
+        super().__init__()
         self.probers = [
             SingleByteCharSetProber(Win1251CyrillicModel),
             SingleByteCharSetProber(Koi8rModel),

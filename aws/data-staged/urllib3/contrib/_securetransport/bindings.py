@@ -29,7 +29,6 @@ license and by oscrypto's:
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
     DEALINGS IN THE SOFTWARE.
 """
-from __future__ import absolute_import
 
 import platform
 from ctypes.util import find_library
@@ -54,7 +53,7 @@ version = platform.mac_ver()[0]
 version_info = tuple(map(int, version.split('.')))
 if version_info < (10, 8):
     raise OSError(
-        'Only OS X 10.8 and newer are supported, not %s.%s' % (
+        'Only OS X 10.8 and newer are supported, not {}.{}'.format(
             version_info[0], version_info[1]
         )
     )
@@ -497,7 +496,7 @@ except (AttributeError):
     raise ImportError('Error initializing ctypes')
 
 
-class CFConst(object):
+class CFConst:
     """
     A class object that acts as essentially a namespace for CoreFoundation
     constants.
@@ -505,7 +504,7 @@ class CFConst(object):
     kCFStringEncodingUTF8 = CFStringEncoding(0x08000100)
 
 
-class SecurityConst(object):
+class SecurityConst:
     """
     A class object that acts as essentially a namespace for Security constants.
     """

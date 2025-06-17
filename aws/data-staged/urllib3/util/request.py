@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from base64 import b64encode
 
 from ..packages.six import b, integer_types
@@ -84,7 +83,7 @@ def set_file_position(body, pos):
     elif getattr(body, 'tell', None) is not None:
         try:
             pos = body.tell()
-        except (IOError, OSError):
+        except OSError:
             # This differentiates from None, allowing us to catch
             # a failed `tell()` later when trying to rewind the body.
             pos = _FAILEDTELL
@@ -107,7 +106,7 @@ def rewind_body(body, body_pos):
     if body_seek is not None and isinstance(body_pos, integer_types):
         try:
             body_seek(body_pos)
-        except (IOError, OSError):
+        except OSError:
             raise UnrewindableBodyError("An error occurred when rewinding request "
                                         "body for redirect/retry.")
     elif body_pos is _FAILEDTELL:

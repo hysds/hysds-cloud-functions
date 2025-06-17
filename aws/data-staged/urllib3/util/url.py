@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from collections import namedtuple
 
 from ..exceptions import LocationParseError
@@ -27,7 +26,7 @@ class Url(namedtuple('Url', url_attrs)):
             scheme = scheme.lower()
         if host and scheme in NORMALIZABLE_SCHEMES:
             host = host.lower()
-        return super(Url, cls).__new__(cls, scheme, auth, host, port, path,
+        return super().__new__(cls, scheme, auth, host, port, path,
                                        query, fragment)
 
     @property

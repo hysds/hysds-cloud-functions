@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 import collections
 import functools
 import logging
@@ -396,15 +395,15 @@ class ProxyManager(PoolManager):
         connection_pool_kw['_proxy'] = self.proxy
         connection_pool_kw['_proxy_headers'] = self.proxy_headers
 
-        super(ProxyManager, self).__init__(
+        super().__init__(
             num_pools, headers, **connection_pool_kw)
 
     def connection_from_host(self, host, port=None, scheme='http', pool_kwargs=None):
         if scheme == "https":
-            return super(ProxyManager, self).connection_from_host(
+            return super().connection_from_host(
                 host, port, scheme, pool_kwargs=pool_kwargs)
 
-        return super(ProxyManager, self).connection_from_host(
+        return super().connection_from_host(
             self.proxy.host, self.proxy.port, self.proxy.scheme, pool_kwargs=pool_kwargs)
 
     def _set_proxy_headers(self, url, headers=None):
@@ -433,7 +432,7 @@ class ProxyManager(PoolManager):
             headers = kw.get('headers', self.headers)
             kw['headers'] = self._set_proxy_headers(url, headers)
 
-        return super(ProxyManager, self).urlopen(method, url, redirect=redirect, **kw)
+        return super().urlopen(method, url, redirect=redirect, **kw)
 
 
 def proxy_from_url(url, **kw):

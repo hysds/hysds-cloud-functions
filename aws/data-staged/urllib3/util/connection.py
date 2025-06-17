@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 import socket
 from .wait import wait_for_read
 from .selectors import HAS_SELECT, SelectorError
@@ -73,7 +72,7 @@ def create_connection(address, timeout=socket._GLOBAL_DEFAULT_TIMEOUT,
             sock.connect(sa)
             return sock
 
-        except socket.error as e:
+        except OSError as e:
             err = e
             if sock is not None:
                 sock.close()
@@ -82,7 +81,7 @@ def create_connection(address, timeout=socket._GLOBAL_DEFAULT_TIMEOUT,
     if err is not None:
         raise err
 
-    raise socket.error("getaddrinfo returns an empty list")
+    raise OSError("getaddrinfo returns an empty list")
 
 
 def _set_socket_options(sock, options):

@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from contextlib import contextmanager
 import zlib
 import io
@@ -19,7 +18,7 @@ from .util.response import is_fp_closed, is_response_to_head
 log = logging.getLogger(__name__)
 
 
-class DeflateDecoder(object):
+class DeflateDecoder:
 
     def __init__(self):
         self._first_try = True
@@ -52,7 +51,7 @@ class DeflateDecoder(object):
                 self._data = None
 
 
-class GzipDecoder(object):
+class GzipDecoder:
 
     def __init__(self):
         self._obj = zlib.decompressobj(16 + zlib.MAX_WBITS)
@@ -223,7 +222,7 @@ class HTTPResponse(io.IOBase):
                 # (e.g. Content-Length: 42, 42). This line ensures the values
                 # are all valid ints and that as long as the `set` length is 1,
                 # all values are the same. Otherwise, the header is invalid.
-                lengths = set([int(val) for val in length.split(',')])
+                lengths = {int(val) for val in length.split(',')}
                 if len(lengths) > 1:
                     raise InvalidHeader("Content-Length contained multiple "
                                         "unmatching values (%s)" % length)
@@ -264,7 +263,7 @@ class HTTPResponse(io.IOBase):
         try:
             if decode_content and self._decoder:
                 data = self._decoder.decompress(data)
-        except (IOError, zlib.error) as e:
+        except (OSError, zlib.error) as e:
             content_encoding = self.headers.get('content-encoding', '').lower()
             raise DecodeError(
                 "Received response with content-encoding: %s, but "
@@ -429,8 +428,7 @@ class HTTPResponse(io.IOBase):
             'content-encoding' header.
         """
         if self.chunked and self.supports_chunked_reads():
-            for line in self.read_chunked(amt, decode_content=decode_content):
-                yield line
+            yield from self.read_chunked(amt, decode_content=decode_content)
         else:
             while not is_fp_closed(self._fp):
                 data = self.read(amt=amt, decode_content=decode_content)
@@ -499,11 +497,11 @@ class HTTPResponse(io.IOBase):
 
     def fileno(self):
         if self._fp is None:
-            raise IOError("HTTPResponse has no file to get a fileno from")
+            raise OSError("HTTPResponse has no file to get a fileno from")
         elif hasattr(self._fp, "fileno"):
             return self._fp.fileno()
         else:
-            raise IOError("The file-like object this HTTPResponse is wrapped "
+            raise OSError("The file-like object this HTTPResponse is wrapped "
                           "around has no file descriptor")
 
     def flush(self):

@@ -1,5 +1,4 @@
 """Module containing bug report helper(s)."""
-from __future__ import print_function
 
 import json
 import platform
@@ -39,7 +38,7 @@ def _implementation():
     if implementation == 'CPython':
         implementation_version = platform.python_version()
     elif implementation == 'PyPy':
-        implementation_version = '%s.%s.%s' % (sys.pypy_version_info.major,
+        implementation_version = '{}.{}.{}'.format(sys.pypy_version_info.major,
                                                sys.pypy_version_info.minor,
                                                sys.pypy_version_info.micro)
         if sys.pypy_version_info.releaselevel != 'final':
@@ -63,7 +62,7 @@ def info():
             'system': platform.system(),
             'release': platform.release(),
         }
-    except IOError:
+    except OSError:
         platform_info = {
             'system': 'Unknown',
             'release': 'Unknown',
